@@ -6,6 +6,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.server.ResponseStatusException;
 
 import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
@@ -19,6 +21,9 @@ public class UserServiceTest {
 	@Mock
 	private UserRepository userRepository;
 
+	@Mock
+	private PasswordEncoder passwordEncoder;
+
 	@InjectMocks
 	private UserService userService;
 
@@ -28,59 +33,76 @@ public class UserServiceTest {
 	public void setup() {
 		MockitoAnnotations.openMocks(this);
 
-		// given
 		testUser = new User();
 		testUser.setId(1L);
-		testUser.setName("testName");
+		testUser.setEmail("test@example.com");
 		testUser.setUsername("testUsername");
+		testUser.setPassword("secret");
 
-		// when -> any object is being save in the userRepository -> return the dummy
-		// testUser
-		Mockito.when(userRepository.save(Mockito.any())).thenReturn(testUser);
+		Mockito.when(passwordEncoder.encode("secret")).thenReturn("hashed-secret");
+		Mockito.when(userRepository.save(Mockito.any())).thenAnswer(invocation -> invocation.getArgument(0));
 	}
 
 	@Test
 	public void createUser_validInputs_success() {
-		// when -> any object is being save in the userRepository -> return the dummy
-		// testUser
 		User createdUser = userService.createUser(testUser);
 
-		// then
 		Mockito.verify(userRepository, Mockito.times(1)).save(Mockito.any());
-
-		assertEquals(testUser.getId(), createdUser.getId());
-		assertEquals(testUser.getName(), createdUser.getName());
+		assertEquals(testUser.getEmail(), createdUser.getEmail());
 		assertEquals(testUser.getUsername(), createdUser.getUsername());
+		assertEquals("hashed-secret", createdUser.getPassword());
 		assertNotNull(createdUser.getToken());
 		assertEquals(UserStatus.OFFLINE, createdUser.getStatus());
 	}
 
 	@Test
-	public void createUser_duplicateName_throwsException() {
-		// given -> a first user has already been created
+	public void createUser_duplicateEmail_throwsException() {
 		userService.createUser(testUser);
-
-		// when -> setup additional mocks for UserRepository
-		Mockito.when(userRepository.findByName(Mockito.any())).thenReturn(testUser);
+		Mockito.when(userRepository.findByEmail(Mockito.any())).thenReturn(testUser);
 		Mockito.when(userRepository.findByUsername(Mockito.any())).thenReturn(null);
 
-		// then -> attempt to create second user with same user -> check that an error
-		// is thrown
 		assertThrows(ResponseStatusException.class, () -> userService.createUser(testUser));
 	}
 
 	@Test
 	public void createUser_duplicateInputs_throwsException() {
-		// given -> a first user has already been created
 		userService.createUser(testUser);
-
-		// when -> setup additional mocks for UserRepository
-		Mockito.when(userRepository.findByName(Mockito.any())).thenReturn(testUser);
+		Mockito.when(userRepository.findByEmail(Mockito.any())).thenReturn(testUser);
 		Mockito.when(userRepository.findByUsername(Mockito.any())).thenReturn(testUser);
 
-		// then -> attempt to create second user with same user -> check that an error
-		// is thrown
 		assertThrows(ResponseStatusException.class, () -> userService.createUser(testUser));
 	}
 
+	@Test
+	public void loginUser_validCredentials_success() {
+		User persistedUser = new User();
+		persistedUser.setUsername("testUsername");
+		persistedUser.setPassword("hashed-secret");
+		persistedUser.setStatus(UserStatus.OFFLINE);
+		persistedUser.setToken("old-token");
+
+		Mockito.when(userRepository.findByUsername("testUsername")).thenReturn(persistedUser);
+		Mockito.when(passwordEncoder.matches("secret", "hashed-secret")).thenReturn(true);
+		Mockito.when(userRepository.save(Mockito.any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+		User loggedInUser = userService.loginUser("testUsername", "secret");
+
+		assertEquals(UserStatus.ONLINE, loggedInUser.getStatus());
+		assertNotNull(loggedInUser.getToken());
+		assertNotEquals("old-token", loggedInUser.getToken());
+	}
+
+	@Test
+	public void loginUser_invalidPassword_throwsUnauthorized() {
+		User persistedUser = new User();
+		persistedUser.setUsername("testUsername");
+		persistedUser.setPassword("hashed-secret");
+
+		Mockito.when(userRepository.findByUsername("testUsername")).thenReturn(persistedUser);
+		Mockito.when(passwordEncoder.matches("wrong", "hashed-secret")).thenReturn(false);
+
+		ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+				() -> userService.loginUser("testUsername", "wrong"));
+		assertEquals(HttpStatus.UNAUTHORIZED, exception.getStatusCode());
+	}
 }

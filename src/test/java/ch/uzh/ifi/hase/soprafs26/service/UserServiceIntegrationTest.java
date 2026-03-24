@@ -37,19 +37,17 @@ public class UserServiceIntegrationTest {
 
 	@Test
 	public void createUser_validInputs_success() {
-		// given
 		assertNull(userRepository.findByUsername("testUsername"));
 
 		User testUser = new User();
-		testUser.setName("testName");
+		testUser.setEmail("test@example.com");
 		testUser.setUsername("testUsername");
+		testUser.setPassword("secret");
 
-		// when
 		User createdUser = userService.createUser(testUser);
 
-		// then
 		assertEquals(testUser.getId(), createdUser.getId());
-		assertEquals(testUser.getName(), createdUser.getName());
+		assertEquals(testUser.getEmail(), createdUser.getEmail());
 		assertEquals(testUser.getUsername(), createdUser.getUsername());
 		assertNotNull(createdUser.getToken());
 		assertEquals(UserStatus.OFFLINE, createdUser.getStatus());
@@ -60,18 +58,16 @@ public class UserServiceIntegrationTest {
 		assertNull(userRepository.findByUsername("testUsername"));
 
 		User testUser = new User();
-		testUser.setName("testName");
+		testUser.setEmail("test@example.com");
 		testUser.setUsername("testUsername");
+		testUser.setPassword("secret");
 		userService.createUser(testUser);
 
-		// attempt to create second user with same username
 		User testUser2 = new User();
-
-		// change the name but forget about the username
-		testUser2.setName("testName2");
+		testUser2.setEmail("test2@example.com");
 		testUser2.setUsername("testUsername");
+		testUser2.setPassword("secret2");
 
-		// check that an error is thrown
 		assertThrows(ResponseStatusException.class, () -> userService.createUser(testUser2));
 	}
 }
