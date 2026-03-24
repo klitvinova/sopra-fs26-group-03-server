@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -29,9 +30,11 @@ public class UserService {
 	private final Logger log = LoggerFactory.getLogger(UserService.class);
 
 	private final UserRepository userRepository;
+	private final PasswordEncoder passwordEncoder;
 
-	public UserService(@Qualifier("userRepository") UserRepository userRepository) {
+	public UserService(@Qualifier("userRepository") UserRepository userRepository, PasswordEncoder passwordEncoder) {
 		this.userRepository = userRepository;
+		this.passwordEncoder = passwordEncoder;
 	}
 
 	public List<User> getUsers() {
@@ -39,11 +42,10 @@ public class UserService {
 	}
 
 	public User createUser(User newUser) {
+		checkIfUserExists(newUser);
 		newUser.setToken(UUID.randomUUID().toString());
 		newUser.setStatus(UserStatus.OFFLINE);
-		checkIfUserExists(newUser);
-		// saves the given entity but data is only persisted in the database once
-		// flush() is called
+		newUser.setPassword(passwordEncoder.encode(newUser.getPassword()));
 		newUser = userRepository.save(newUser);
 		userRepository.flush();
 
@@ -51,11 +53,27 @@ public class UserService {
 		return newUser;
 	}
 
+	public User loginUser(String username, String password) {
+		User user = userRepository.findByUsername(username);
+		if (user == null || !passwordEncoder.matches(password, user.getPassword())) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password");
+		}
+
+		user.setToken(UUID.randomUUID().toString());
+		user.setStatus(UserStatus.ONLINE);
+		user = userRepository.save(user);
+		userRepository.flush();
+		return user;
+	}
+
+	public User getUserByToken(String token) {
+		return userRepository.findByToken(token);
+	}
+
 	/**
 	 * This is a helper method that will check the uniqueness criteria of the
-	 * username and the name
-	 * defined in the User entity. The method will do nothing if the input is unique
-	 * and throw an error otherwise.
+	 * username and email defined in the User entity. The method will do nothing
+	 * if the input is unique and throw an error otherwise.
 	 *
 	 * @param userToBeCreated
 	 * @throws org.springframework.web.server.ResponseStatusException
@@ -63,16 +81,18 @@ public class UserService {
 	 */
 	private void checkIfUserExists(User userToBeCreated) {
 		User userByUsername = userRepository.findByUsername(userToBeCreated.getUsername());
-		User userByName = userRepository.findByName(userToBeCreated.getName());
+		User userByEmail = userRepository.findByEmail(userToBeCreated.getEmail());
 
-		String baseErrorMessage = "The %s provided %s not unique. Therefore, the user could not be created!";
-		if (userByUsername != null && userByName != null) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-					String.format(baseErrorMessage, "username and the name", "are"));
+		if (userByUsername != null && userByEmail != null) {
+			throw new ResponseStatusException(HttpStatus.CONFLICT,
+					String.format("Both username '%s' and email '%s' are already in use.",
+							userToBeCreated.getUsername(), userToBeCreated.getEmail()));
 		} else if (userByUsername != null) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format(baseErrorMessage, "username", "is"));
-		} else if (userByName != null) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format(baseErrorMessage, "name", "is"));
+			throw new ResponseStatusException(HttpStatus.CONFLICT,
+					String.format("Username '%s' is already in use.", userToBeCreated.getUsername()));
+		} else if (userByEmail != null) {
+			throw new ResponseStatusException(HttpStatus.CONFLICT,
+					String.format("Email '%s' is already in use.", userToBeCreated.getEmail()));
 		}
 	}
 }
