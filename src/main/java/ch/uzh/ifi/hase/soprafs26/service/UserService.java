@@ -16,13 +16,6 @@ import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * User Service
- * This class is the "worker" and responsible for all functionality related to
- * the user
- * (e.g., it creates, modifies, deletes, finds). The result will be passed back
- * to the caller.
- */
 @Service
 @Transactional
 public class UserService {
@@ -45,7 +38,7 @@ public class UserService {
 		checkIfUserExists(newUser);
 		newUser.setToken(UUID.randomUUID().toString());
 		newUser.setStatus(UserStatus.OFFLINE);
-		newUser.setPassword(passwordEncoder.encode(newUser.getPassword()));
+		newUser.setPasswordHash(passwordEncoder.encode(newUser.getPasswordHash()));
 		newUser = userRepository.save(newUser);
 		userRepository.flush();
 
@@ -55,7 +48,7 @@ public class UserService {
 
 	public User loginUser(String username, String password) {
 		User user = userRepository.findByUsername(username);
-		if (user == null || !passwordEncoder.matches(password, user.getPassword())) {
+		if (user == null || !passwordEncoder.matches(password, user.getPasswordHash())) {
 			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password");
 		}
 
@@ -70,6 +63,69 @@ public class UserService {
 		return userRepository.findByToken(token);
 	}
 
+    public User getUserById(String userID) {
+        return userRepository.findByUserID(userID);
+    }
+
+	public User updateUserById(String userID, User userUpdates) {
+		User user = userRepository.findByUserID(userID);
+		if (user == null) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+		}
+
+		if (userUpdates.getEmail() != null) {
+			String newEmail = userUpdates.getEmail();
+			if (newEmail.isBlank()) {
+				throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email must not be blank");
+			}
+			if (!newEmail.equals(user.getEmail())) {
+				User existingUser = userRepository.findByEmail(newEmail);
+				if (existingUser != null && !existingUser.getUserID().equals(userID)) {
+					throw new ResponseStatusException(HttpStatus.CONFLICT,
+							String.format("Email '%s' is already in use.", newEmail));
+				}
+				user.setEmail(newEmail);
+			}
+		}
+
+		if (userUpdates.getUsername() != null) {
+			String newUsername = userUpdates.getUsername();
+			if (newUsername.isBlank()) {
+				throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username must not be blank");
+			}
+			if (!newUsername.equals(user.getUsername())) {
+				User existingUser = userRepository.findByUsername(newUsername);
+				if (existingUser != null && !existingUser.getUserID().equals(userID)) {
+					throw new ResponseStatusException(HttpStatus.CONFLICT,
+							String.format("Username '%s' is already in use.", newUsername));
+				}
+				user.setUsername(newUsername);
+			}
+		}
+
+		if (userUpdates.getPasswordHash() != null) {
+			String newPassword = userUpdates.getPasswordHash();
+			if (newPassword.isBlank()) {
+				throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must not be blank");
+			}
+			user.setPasswordHash(passwordEncoder.encode(newPassword));
+		}
+
+		if (userUpdates.getBio() != null) {
+			user.setBio(userUpdates.getBio());
+		}
+		if (userUpdates.getProfilePicture() != null) {
+			user.setProfilePicture(userUpdates.getProfilePicture());
+		}
+		if (userUpdates.getStatus() != null) {
+			user.setStatus(userUpdates.getStatus());
+		}
+
+		user = userRepository.save(user);
+		userRepository.flush();
+		return user;
+	}
+
 	public void logoutUser(String token) {
 		User user = userRepository.findByToken(token);
 		if (user == null) {
@@ -82,15 +138,6 @@ public class UserService {
 		userRepository.flush();
 	}
 
-	/**
-	 * This is a helper method that will check the uniqueness criteria of the
-	 * username and email defined in the User entity. The method will do nothing
-	 * if the input is unique and throw an error otherwise.
-	 *
-	 * @param userToBeCreated
-	 * @throws org.springframework.web.server.ResponseStatusException
-	 * @see User
-	 */
 	private void checkIfUserExists(User userToBeCreated) {
 		User userByUsername = userRepository.findByUsername(userToBeCreated.getUsername());
 		User userByEmail = userRepository.findByEmail(userToBeCreated.getEmail());
