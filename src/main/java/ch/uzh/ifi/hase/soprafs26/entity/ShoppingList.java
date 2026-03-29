@@ -18,8 +18,6 @@ public class ShoppingList implements Serializable {
 	@Column(nullable = false)
 	private Long groupId;
 
-	@Column(nullable = false)
-	private Double totalEstimatedCost = 0.0;
 
 	@OneToMany(mappedBy = "shoppingList", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<ShoppingListItem> items = new ArrayList<>();
@@ -40,13 +38,6 @@ public class ShoppingList implements Serializable {
 		this.groupId = groupId;
 	}
 
-	public Double getTotalEstimatedCost() {
-		return totalEstimatedCost;
-	}
-
-	public void setTotalEstimatedCost(Double totalEstimatedCost) {
-		this.totalEstimatedCost = totalEstimatedCost;
-	}
 
 	public List<ShoppingListItem> getItems() {
 		return items;

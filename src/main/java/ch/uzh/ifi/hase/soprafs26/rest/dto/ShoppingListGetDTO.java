@@ -5,7 +5,6 @@ import java.util.List;
 public class ShoppingListGetDTO {
 	private Long id;
 	private Long groupId;
-	private Double totalEstimatedCost;
 	private List<ShoppingListItemGetDTO> items;
 
 	public Long getId() {
@@ -24,13 +23,6 @@ public class ShoppingListGetDTO {
 		this.groupId = groupId;
 	}
 
-	public Double getTotalEstimatedCost() {
-		return totalEstimatedCost;
-	}
-
-	public void setTotalEstimatedCost(Double totalEstimatedCost) {
-		this.totalEstimatedCost = totalEstimatedCost;
-	}
 
 	public List<ShoppingListItemGetDTO> getItems() {
 		return items;

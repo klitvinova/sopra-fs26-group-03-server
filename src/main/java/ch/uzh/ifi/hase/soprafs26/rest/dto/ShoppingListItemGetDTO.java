@@ -6,7 +6,6 @@ public class ShoppingListItemGetDTO {
 	private Long id;
 	private Integer quantity;
 	private Boolean isBought;
-	private Double estimatedPrice;
 	private Long ingredientId;
 	private String ingredientName;
 	private Unit unit;
@@ -35,13 +34,6 @@ public class ShoppingListItemGetDTO {
 		this.isBought = isBought;
 	}
 
-	public Double getEstimatedPrice() {
-		return estimatedPrice;
-	}
-
-	public void setEstimatedPrice(Double estimatedPrice) {
-		this.estimatedPrice = estimatedPrice;
-	}
 
 	public Long getIngredientId() {
 		return ingredientId;

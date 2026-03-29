@@ -41,7 +41,6 @@ public class ShoppingListService {
 	}
 
 	public ShoppingList createShoppingList(ShoppingList newList) {
-		newList.setTotalEstimatedCost(0.0);
 		newList = shoppingListRepository.save(newList);
 		shoppingListRepository.flush();
 		log.debug("Created ShoppingList: {}", newList.getId());
@@ -75,7 +74,6 @@ public class ShoppingListService {
 		newItem.setIngredient(ingredient);
 		shoppingList.getItems().add(newItem);
 
-		recalculateTotalCost(shoppingList);
 
 		newItem = shoppingListItemRepository.save(newItem);
 		shoppingListItemRepository.flush();
@@ -93,10 +91,8 @@ public class ShoppingListService {
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ingredient not found"));
 
 		item.setQuantity(itemUpdate.getQuantity());
-		item.setEstimatedPrice(itemUpdate.getEstimatedPrice());
 		item.setIngredient(ingredient);
 
-		recalculateTotalCost(item.getShoppingList());
 
 		shoppingListItemRepository.save(item);
 		shoppingListItemRepository.flush();
@@ -115,17 +111,9 @@ public class ShoppingListService {
 		ShoppingList shoppingList = item.getShoppingList();
 		shoppingList.getItems().remove(item);
 
-		recalculateTotalCost(shoppingList);
 
 		shoppingListItemRepository.delete(item);
 		shoppingListItemRepository.flush();
 	}
 
-	private void recalculateTotalCost(ShoppingList list) {
-		double total = list.getItems().stream()
-				.mapToDouble(item -> item.getQuantity() * item.getEstimatedPrice())
-				.sum();
-		list.setTotalEstimatedCost(total);
-		shoppingListRepository.save(list);
-	}
 }

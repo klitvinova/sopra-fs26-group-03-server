@@ -20,8 +20,6 @@ public class ShoppingListItem implements Serializable {
 	@Column(nullable = false)
 	private Boolean isBought = false;
 
-	@Column(nullable = false)
-	private Double estimatedPrice = 0.0;
 
 	@ManyToOne
 	@JoinColumn(name = "ingredient_id", nullable = false)
@@ -56,13 +54,6 @@ public class ShoppingListItem implements Serializable {
 		this.isBought = isBought;
 	}
 
-	public Double getEstimatedPrice() {
-		return estimatedPrice;
-	}
-
-	public void setEstimatedPrice(Double estimatedPrice) {
-		this.estimatedPrice = estimatedPrice;
-	}
 
 	public Ingredient getIngredient() {
 		return ingredient;
