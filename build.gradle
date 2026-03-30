@@ -40,6 +40,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'
     implementation 'org.springframework.boot:spring-boot-starter-json'
     implementation 'org.springframework.boot:spring-boot-h2console'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
 
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     runtimeOnly 'com.h2database:h2'
@@ -59,13 +60,21 @@ sonar {
     property "sonar.projectKey", "danzolotov_sopra-fs26-group-03-server"
     property "sonar.projectName", "sopra-fs26-group-03-server"
     property "sonar.organization", "danzolotov"
+    property "sonar.coverage.jacoco.xmlReportPaths", "${layout.buildDirectory.get()}/reports/jacoco/test/jacocoTestReport.xml"
+    property "sonar.junit.reportPaths", "${layout.buildDirectory.get()}/test-results/test"
+    property "sonar.cpd.exclusions", "**/rest/dto/**/*.java,**/entity/**/*.java"
   }
 }
 
 jacocoTestReport {
     reports {
         xml.required = true
+        html.required = true
     }
+}
+
+tasks.named("sonar") {
+    dependsOn tasks.test, tasks.jacocoTestReport
 }
 
 test {
