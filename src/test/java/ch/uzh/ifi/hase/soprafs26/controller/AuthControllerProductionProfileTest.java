@@ -32,18 +32,27 @@ public class AuthControllerProductionProfileTest {
     @MockitoBean
     private UserService userService;
 
-    @Test
-    public void loginUser_productionProfile_setsSecureCookie() throws Exception {
+    private User createTestUser() {
         User user = new User();
         user.setUserID("user-1");
         user.setUsername("testUsername");
         user.setToken("new-token");
         user.setStatus(UserStatus.ONLINE);
         user.setPasswordHash("hashed-secret");
+        return user;
+    }
 
-        LoginPostDTO loginPostDTO = new LoginPostDTO();
-        loginPostDTO.setUsername("testUsername");
-        loginPostDTO.setPassword("secret");
+    private LoginPostDTO createLoginDTO() {
+        LoginPostDTO dto = new LoginPostDTO();
+        dto.setUsername("testUsername");
+        dto.setPassword("secret");
+        return dto;
+    }
+
+    @Test
+    public void loginUser_productionProfile_setsSecureCookie() throws Exception {
+        User user = createTestUser();
+        LoginPostDTO loginPostDTO = createLoginDTO();
 
         given(userService.loginUser("testUsername", "secret")).willReturn(user);
 

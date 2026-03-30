@@ -40,8 +40,7 @@ public class AuthControllerTest {
 	@MockitoBean
 	private UserService userService;
 
-	@Test
-	public void createUser_validInput_userCreated() throws Exception {
+	private User createTestUser() {
 		User user = new User();
 		user.setUserID("1");
 		user.setEmail("test@example.com");
@@ -49,11 +48,28 @@ public class AuthControllerTest {
 		user.setToken("1");
 		user.setStatus(UserStatus.ONLINE);
 		user.setPasswordHash("secret");
+		return user;
+	}
 
-		RegisterPostDTO registerPostDTO = new RegisterPostDTO();
-		registerPostDTO.setEmail("test@example.com");
-		registerPostDTO.setUsername("testUsername");
-		registerPostDTO.setPassword("secret");
+	private RegisterPostDTO createRegisterDTO() {
+		RegisterPostDTO dto = new RegisterPostDTO();
+		dto.setEmail("test@example.com");
+		dto.setUsername("testUsername");
+		dto.setPassword("secret");
+		return dto;
+	}
+
+	private LoginPostDTO createLoginDTO() {
+		LoginPostDTO dto = new LoginPostDTO();
+		dto.setUsername("testUsername");
+		dto.setPassword("secret");
+		return dto;
+	}
+
+	@Test
+	public void createUser_validInput_userCreated() throws Exception {
+		User user = createTestUser();
+		RegisterPostDTO registerPostDTO = createRegisterDTO();
 
 		given(userService.createUser(Mockito.any())).willReturn(user);
 
@@ -72,16 +88,11 @@ public class AuthControllerTest {
 
 	@Test
 	public void loginUser_validInput_userLoggedIn() throws Exception {
-		User user = new User();
+		User user = createTestUser();
 		user.setUserID("user-1");
-		user.setUsername("testUsername");
 		user.setToken("new-token");
-		user.setStatus(UserStatus.ONLINE);
 		user.setPasswordHash("hashed-secret");
-
-		LoginPostDTO loginPostDTO = new LoginPostDTO();
-		loginPostDTO.setUsername("testUsername");
-		loginPostDTO.setPassword("secret");
+		LoginPostDTO loginPostDTO = createLoginDTO();
 
 		given(userService.loginUser("testUsername", "secret")).willReturn(user);
 
@@ -98,10 +109,8 @@ public class AuthControllerTest {
 
 	@Test
 	public void createUser_blankUsername_returnsBadRequest() throws Exception {
-		RegisterPostDTO registerPostDTO = new RegisterPostDTO();
-		registerPostDTO.setEmail("test@example.com");
+		RegisterPostDTO registerPostDTO = createRegisterDTO();
 		registerPostDTO.setUsername("   ");
-		registerPostDTO.setPassword("secret");
 
 		MockHttpServletRequestBuilder postRequest = post("/auth/register")
 				.contentType(MediaType.APPLICATION_JSON)
@@ -113,8 +122,7 @@ public class AuthControllerTest {
 
 	@Test
 	public void loginUser_blankPassword_returnsBadRequest() throws Exception {
-		LoginPostDTO loginPostDTO = new LoginPostDTO();
-		loginPostDTO.setUsername("testUsername");
+		LoginPostDTO loginPostDTO = createLoginDTO();
 		loginPostDTO.setPassword(" ");
 
 		MockHttpServletRequestBuilder postRequest = post("/auth/login")

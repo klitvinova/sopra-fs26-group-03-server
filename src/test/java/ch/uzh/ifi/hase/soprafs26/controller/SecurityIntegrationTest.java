@@ -37,6 +37,21 @@ public class SecurityIntegrationTest {
         userRepository.deleteAll();
     }
 
+    private User createAndPersistUser(String email, String username, String passwordHash, String token) {
+        User user = new User();
+        user.setEmail(email);
+        user.setUsername(username);
+        user.setPasswordHash(passwordHash);
+        user.setToken(token);
+        user.setStatus(UserStatus.ONLINE);
+        return userRepository.saveAndFlush(user);
+    }
+
+    private User createOnlineUser(String email, String username, String token) {
+        String encodedPassword = new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder().encode("hashed-password");
+        return createAndPersistUser(email, username, encodedPassword, token);
+    }
+
     @Test
     public void register_withoutAuthorization_isAllowed() throws Exception {
         RegisterPostDTO registerPostDTO = new RegisterPostDTO();
@@ -86,13 +101,7 @@ public class SecurityIntegrationTest {
 
     @Test
     public void users_withBearerHeader_isUnauthorized() throws Exception {
-        User persistedUser = new User();
-        persistedUser.setEmail("authorized-user@example.com");
-        persistedUser.setUsername("authorized-user");
-        persistedUser.setPasswordHash("hashed-password");
-        persistedUser.setToken("valid-token");
-        persistedUser.setStatus(UserStatus.ONLINE);
-        userRepository.saveAndFlush(persistedUser);
+        createOnlineUser("authorized-user@example.com", "authorized-user", "valid-token");
 
         MockHttpServletRequestBuilder request = get("/users")
                 .header("Authorization", "Bearer valid-token")
@@ -103,13 +112,7 @@ public class SecurityIntegrationTest {
 
     @Test
     public void users_withValidAuthCookie_isAllowed() throws Exception {
-        User persistedUser = new User();
-        persistedUser.setEmail("authorized-user@example.com");
-        persistedUser.setUsername("authorized-user");
-        persistedUser.setPasswordHash("hashed-password");
-        persistedUser.setToken("valid-token");
-        persistedUser.setStatus(UserStatus.ONLINE);
-        userRepository.saveAndFlush(persistedUser);
+        createOnlineUser("authorized-user@example.com", "authorized-user", "valid-token");
 
         MockHttpServletRequestBuilder request = get("/users")
                 .cookie(new MockCookie("AUTH_TOKEN", "valid-token"))
@@ -122,13 +125,7 @@ public class SecurityIntegrationTest {
 
     @Test
     public void userById_withOwnAuthCookie_isAllowed() throws Exception {
-        User persistedUser = new User();
-        persistedUser.setEmail("self-user@example.com");
-        persistedUser.setUsername("self-user");
-        persistedUser.setPasswordHash("hashed-password");
-        persistedUser.setToken("self-token");
-        persistedUser.setStatus(UserStatus.ONLINE);
-        persistedUser = userRepository.saveAndFlush(persistedUser);
+        User persistedUser = createOnlineUser("self-user@example.com", "self-user", "self-token");
 
         MockHttpServletRequestBuilder request = get("/users/{userID}", persistedUser.getUserID())
                 .cookie(new MockCookie("AUTH_TOKEN", "self-token"))
@@ -141,21 +138,8 @@ public class SecurityIntegrationTest {
 
     @Test
     public void userById_withOtherUsersAuthCookie_isForbidden() throws Exception {
-        User requestedUser = new User();
-        requestedUser.setEmail("requested-user@example.com");
-        requestedUser.setUsername("requested-user");
-        requestedUser.setPasswordHash("hashed-password");
-        requestedUser.setToken("requested-token");
-        requestedUser.setStatus(UserStatus.ONLINE);
-        requestedUser = userRepository.saveAndFlush(requestedUser);
-
-        User requesterUser = new User();
-        requesterUser.setEmail("requester-user@example.com");
-        requesterUser.setUsername("requester-user");
-        requesterUser.setPasswordHash("hashed-password");
-        requesterUser.setToken("requester-token");
-        requesterUser.setStatus(UserStatus.ONLINE);
-        userRepository.saveAndFlush(requesterUser);
+        User requestedUser = createOnlineUser("requested-user@example.com", "requested-user", "requested-token");
+        createOnlineUser("requester-user@example.com", "requester-user", "requester-token");
 
         MockHttpServletRequestBuilder request = get("/users/{userID}", requestedUser.getUserID())
                 .cookie(new MockCookie("AUTH_TOKEN", "requester-token"))
@@ -166,13 +150,7 @@ public class SecurityIntegrationTest {
 
     @Test
     public void logout_withValidAuthCookie_clearsCookieAndInvalidatesToken() throws Exception {
-        User persistedUser = new User();
-        persistedUser.setEmail("logout-user@example.com");
-        persistedUser.setUsername("logout-user");
-        persistedUser.setPasswordHash("hashed-password");
-        persistedUser.setToken("logout-token");
-        persistedUser.setStatus(UserStatus.ONLINE);
-        userRepository.saveAndFlush(persistedUser);
+        createOnlineUser("logout-user@example.com", "logout-user", "logout-token");
 
         MockHttpServletRequestBuilder logoutRequest = post("/auth/logout")
                 .cookie(new MockCookie("AUTH_TOKEN", "logout-token"))
