@@ -3,17 +3,17 @@ package ch.uzh.ifi.hase.soprafs26.rest.mapper;
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
 
+import ch.uzh.ifi.hase.soprafs26.entity.Group;
+import ch.uzh.ifi.hase.soprafs26.entity.GroupMembership;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
-import ch.uzh.ifi.hase.soprafs26.rest.dto.LoginGetDTO;
-import ch.uzh.ifi.hase.soprafs26.rest.dto.LoginPostDTO;
-import ch.uzh.ifi.hase.soprafs26.rest.dto.RegisterPostDTO;
-import ch.uzh.ifi.hase.soprafs26.rest.dto.UserGetDTO;
-import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.*;
 
 @Mapper
 public interface DTOMapper {
 
 	DTOMapper INSTANCE = Mappers.getMapper(DTOMapper.class);
+
+	// ─── User mappings (from main) ──────────────────
 
 	@BeanMapping(ignoreByDefault = true)
 	@Mapping(source = "email", target = "email")
@@ -43,7 +43,18 @@ public interface DTOMapper {
 	@Mapping(source = "status", target = "status")
 	UserGetDTO convertEntityToUserGetDTO(User user);
 
-    @Mapping(source = "userID", target = "userID")
-    @Mapping(source = "token", target = "token")
-    LoginGetDTO convertEntityToLoginGetDTO(User user);
+	@Mapping(source = "userID", target = "userID")
+	@Mapping(source = "token", target = "token")
+	LoginGetDTO convertEntityToLoginGetDTO(User user);
+
+	// ─── Group mappings ─────────────────────────────
+
+	@Mapping(source = "memberships", target = "members")
+	GroupGetDTO convertEntityToGroupGetDTO(Group group);
+
+	@Mapping(source = "user.userID", target = "userID")
+	@Mapping(source = "user.username", target = "username")
+	@Mapping(source = "role", target = "role")
+	@Mapping(source = "joinedAt", target = "joinedAt")
+	GroupMemberGetDTO convertEntityToGroupMemberGetDTO(GroupMembership membership);
 }
