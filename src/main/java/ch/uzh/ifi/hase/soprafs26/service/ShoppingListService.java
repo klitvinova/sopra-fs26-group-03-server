@@ -22,14 +22,20 @@ public class ShoppingListService {
 	private final ShoppingListRepository shoppingListRepository;
 	private final ShoppingListItemRepository shoppingListItemRepository;
 	private final IngredientRepository ingredientRepository;
+	private final PantryRepository pantryRepository;
+	private final PantryService pantryService;
 
 	@Autowired
 	public ShoppingListService(@Qualifier("shoppingListRepository") ShoppingListRepository shoppingListRepository,
 			@Qualifier("shoppingListItemRepository") ShoppingListItemRepository shoppingListItemRepository,
-			@Qualifier("ingredientRepository") IngredientRepository ingredientRepository) {
+			@Qualifier("ingredientRepository") IngredientRepository ingredientRepository,
+			@Qualifier("pantryRepository") PantryRepository pantryRepository,
+			PantryService pantryService) {
 		this.shoppingListRepository = shoppingListRepository;
 		this.shoppingListItemRepository = shoppingListItemRepository;
 		this.ingredientRepository = ingredientRepository;
+		this.pantryRepository = pantryRepository;
+		this.pantryService = pantryService;
 	}
 
 	public ShoppingList getShoppingListByGroupId(Long groupId) {
@@ -45,6 +51,16 @@ public class ShoppingListService {
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Shopping list not found"));
 		Ingredient ingredient = ingredientRepository.findById(ingredientId)
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ingredient not found"));
+
+		for (ShoppingListItem existing : list.getItems()) {
+			if (existing.getIngredient().getId().equals(ingredientId) && Boolean.FALSE.equals(existing.getIsBought())) {
+				existing.setQuantity(existing.getQuantity() + quantity);
+				shoppingListItemRepository.save(existing);
+				shoppingListItemRepository.flush();
+				log.debug("Merged quantity for ingredient {} in shopping list {}", ingredientId, listId);
+				return existing;
+			}
+		}
 
 		ShoppingListItem item = new ShoppingListItem();
 		item.setShoppingList(list);
@@ -96,6 +112,23 @@ public class ShoppingListService {
 		item.setIsBought(isBought);
 		item = shoppingListItemRepository.save(item);
 		shoppingListItemRepository.flush();
+
+		if (Boolean.TRUE.equals(isBought)) {
+			Long groupId = item.getShoppingList().getGroupId();
+			Pantry pantry = pantryRepository.findAllByGroupId(groupId).stream()
+					.findFirst().orElse(null);
+			if (pantry != null) {
+				pantryService.addItemToPantry(
+						pantry.getId(),
+						item.getIngredient().getId(),
+						item.getQuantity());
+
+				ShoppingList shoppingList = item.getShoppingList();
+				shoppingList.getItems().remove(item);
+				shoppingListItemRepository.delete(item);
+				shoppingListItemRepository.flush();
+			}
+		}
 
 		return item;
 	}
