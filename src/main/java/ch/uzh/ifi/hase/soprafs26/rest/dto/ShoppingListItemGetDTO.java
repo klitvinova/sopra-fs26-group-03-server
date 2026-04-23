@@ -1,6 +1,6 @@
 package ch.uzh.ifi.hase.soprafs26.rest.dto;
 
-import ch.uzh.ifi.hase.soprafs26.constant.Ingredient_Category;
+import ch.uzh.ifi.hase.soprafs26.constant.IngredientCategory;
 import ch.uzh.ifi.hase.soprafs26.constant.Unit;
 
 public class ShoppingListItemGetDTO {
@@ -10,7 +10,7 @@ public class ShoppingListItemGetDTO {
 	private Long ingredientId;
 	private String ingredientName;
 	private Unit unit;
-    private Ingredient_Category category;
+    private IngredientCategory category;
 
 	public Long getId() { return id; }
 	public void setId(Long id) { this.id = id; }
@@ -25,11 +25,11 @@ public class ShoppingListItemGetDTO {
 	public Unit getUnit() { return unit; }
 	public void setUnit(Unit unit) { this.unit = unit; }
 
-    public Ingredient_Category getCategory() {
+    public IngredientCategory getCategory() {
         return category;
     }
 
-    public void setCategory(Ingredient_Category category) {
+    public void setCategory(IngredientCategory category) {
         this.category = category;
     }
 }

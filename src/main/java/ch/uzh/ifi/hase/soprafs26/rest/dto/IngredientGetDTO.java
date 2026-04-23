@@ -1,12 +1,14 @@
 package ch.uzh.ifi.hase.soprafs26.rest.dto;
 
 import ch.uzh.ifi.hase.soprafs26.constant.Unit;
+import ch.uzh.ifi.hase.soprafs26.constant.IngredientCategory;
 
 public class IngredientGetDTO {
 	private Long id;
 	private String ingredientName;
 	private String ingredientDescription;
 	private Unit unit;
+	private IngredientCategory category;
 
 	public Long getId() {
 		return id;
@@ -38,6 +40,14 @@ public class IngredientGetDTO {
 
 	public void setUnit(Unit unit) {
 		this.unit = unit;
+	}
+
+	public IngredientCategory getCategory() {
+		return category;
+	}
+
+	public void setCategory(IngredientCategory category) {
+		this.category = category;
 	}
 }
 
