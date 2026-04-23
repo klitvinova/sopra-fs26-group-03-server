@@ -77,7 +77,7 @@ public class PantryControllerTest {
 		given(groupService.getGroupOfUser("user-1")).willReturn(testGroup);
 		given(pantryService.getPantryByGroupId(1L)).willReturn(testPantry);
 
-		mockMvc.perform(get("/groups/my/pantry")
+		mockMvc.perform(get("/groups/me/pantry")
 						.principal(new UsernamePasswordAuthenticationToken("user-1", null)))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.id", is(10)))
@@ -94,7 +94,7 @@ public class PantryControllerTest {
 		given(pantryService.getPantryByGroupId(1L)).willReturn(testPantry);
 		given(pantryService.addItemToPantry(10L, 100L, 5)).willReturn(testItem);
 
-		mockMvc.perform(post("/groups/my/pantry/items")
+		mockMvc.perform(post("/groups/me/pantry/items")
 						.principal(new UsernamePasswordAuthenticationToken("user-1", null))
 						.contentType(MediaType.APPLICATION_JSON)
 						.content("{\"ingredientId\":100,\"quantity\":5}"))
@@ -113,7 +113,7 @@ public class PantryControllerTest {
 		given(groupService.getGroupOfUser("user-1")).willReturn(testGroup);
 		doNothing().when(pantryService).updateItem(eq(500L), eq(100L), eq(10));
 
-		mockMvc.perform(put("/groups/my/pantry/items/{itemId}", 500L)
+		mockMvc.perform(put("/groups/me/pantry/items/{itemId}", 500L)
 						.principal(new UsernamePasswordAuthenticationToken("user-1", null))
 						.contentType(MediaType.APPLICATION_JSON)
 						.content("{\"ingredientId\":100,\"quantity\":10}"))
@@ -127,7 +127,7 @@ public class PantryControllerTest {
 		given(groupService.getGroupOfUser("user-1")).willReturn(testGroup);
 		doNothing().when(pantryService).deleteItem(500L);
 
-		mockMvc.perform(delete("/groups/my/pantry/items/{itemId}", 500L)
+		mockMvc.perform(delete("/groups/me/pantry/items/{itemId}", 500L)
 						.principal(new UsernamePasswordAuthenticationToken("user-1", null)))
 				.andExpect(status().isNoContent());
 

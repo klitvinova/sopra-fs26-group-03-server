@@ -69,7 +69,7 @@ public class ShoppingListControllerTest {
 		given(groupService.getGroupOfUser("user-1")).willReturn(testGroup);
 		given(shoppingListService.getShoppingListByGroupId(1L)).willReturn(testList);
 
-		mockMvc.perform(get("/groups/my/shopping-list")
+		mockMvc.perform(get("/groups/me/shopping-list")
 						.principal(new UsernamePasswordAuthenticationToken("user-1", null)))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.id", is(10)));
@@ -85,7 +85,7 @@ public class ShoppingListControllerTest {
 		given(shoppingListService.getShoppingListByGroupId(1L)).willReturn(testList);
 		given(shoppingListService.addItemToList(10L, 100L, 2)).willReturn(testItem);
 
-		mockMvc.perform(post("/groups/my/shopping-list/items")
+		mockMvc.perform(post("/groups/me/shopping-list/items")
 						.principal(new UsernamePasswordAuthenticationToken("user-1", null))
 						.contentType(MediaType.APPLICATION_JSON)
 						.content("{\"ingredientId\":100,\"quantity\":2}"))
@@ -104,7 +104,7 @@ public class ShoppingListControllerTest {
 		given(groupService.getGroupOfUser("user-1")).willReturn(testGroup);
 		given(shoppingListService.patchItemBoughtStatus(500L, true)).willReturn(testItem);
 
-		mockMvc.perform(patch("/groups/my/shopping-list/items/{itemId}", 500L)
+		mockMvc.perform(patch("/groups/me/shopping-list/items/{itemId}", 500L)
 						.principal(new UsernamePasswordAuthenticationToken("user-1", null))
 						.contentType(MediaType.APPLICATION_JSON)
 						.content("{\"isBought\":true}"))
