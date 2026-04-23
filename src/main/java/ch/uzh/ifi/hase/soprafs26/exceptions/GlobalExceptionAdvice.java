@@ -8,6 +8,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.TransactionSystemException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.context.request.WebRequest;
@@ -15,6 +17,8 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.HashMap;
+import java.util.Map;
 
 @ControllerAdvice(annotations = RestController.class)
 public class GlobalExceptionAdvice extends ResponseEntityExceptionHandler {
@@ -40,8 +44,12 @@ public class GlobalExceptionAdvice extends ResponseEntityExceptionHandler {
 	}
 
 	@ExceptionHandler(Exception.class)
-	public ResponseStatusException handleGeneralException(Exception ex) {
-		log.error("Unhandled Exception caught:", ex);
-		return new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred: " + ex.getMessage(), ex);
+	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+	@ResponseBody
+	public Map<String, String> handleGeneralException(Exception ex) {
+		log.error("Unhandled exception occurred", ex);
+		Map<String, String> response = new HashMap<>();
+		response.put("message", "An unexpected error occurred: " + ex.getMessage());
+		return response;
 	}
 }
