@@ -1,11 +1,10 @@
 package ch.uzh.ifi.hase.soprafs26.entity;
 
-import ch.uzh.ifi.hase.soprafs26.constant.Ingredient_Category;
+import ch.uzh.ifi.hase.soprafs26.constant.IngredientCategory;
 import jakarta.persistence.*;
 import ch.uzh.ifi.hase.soprafs26.constant.Unit;
 import java.io.Serializable;
-import java.lang.reflect.Array;
-import java.util.List;
+
 
 @Entity
 @Table(name = "ingredients")
@@ -24,11 +23,15 @@ public class Ingredient implements Serializable {
 	private String ingredientDescription;
 
     @Enumerated(EnumType.STRING)
-    private Ingredient_Category category;
+    private IngredientCategory category;
 
 	@Column(nullable = false)
 	@Enumerated(EnumType.STRING)
 	private Unit unit;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
 
 	@Column(nullable = true)
 	private Integer quantity;
@@ -50,11 +53,19 @@ public class Ingredient implements Serializable {
 	public Recipe getRecipe() { return recipe; }
 	public void setRecipe(Recipe recipe) { this.recipe = recipe; }
 
-    public Ingredient_Category getCategory() {
+    public IngredientCategory getCategory() {
         return category;
     }
 
-    public void setCategory(Ingredient_Category category) {
+    public void setCategory(IngredientCategory category) {
         this.category = category;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 }

@@ -24,10 +24,14 @@ public class UserService {
 
 	private final UserRepository userRepository;
 	private final PasswordEncoder passwordEncoder;
+	private final IngredientService ingredientService;
 
-	public UserService(@Qualifier("userRepository") UserRepository userRepository, PasswordEncoder passwordEncoder) {
+	public UserService(@Qualifier("userRepository") UserRepository userRepository,
+			PasswordEncoder passwordEncoder,
+			IngredientService ingredientService) {
 		this.userRepository = userRepository;
 		this.passwordEncoder = passwordEncoder;
+		this.ingredientService = ingredientService;
 	}
 
 	public List<User> getUsers() {
@@ -40,6 +44,7 @@ public class UserService {
 		newUser.setStatus(UserStatus.OFFLINE);
 		newUser.setPasswordHash(passwordEncoder.encode(newUser.getPasswordHash()));
 		newUser = userRepository.save(newUser);
+        ingredientService.seedIngredients(newUser);
 		userRepository.flush();
 
 		log.debug("Created Information for User: {}", newUser);

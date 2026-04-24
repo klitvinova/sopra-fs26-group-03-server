@@ -92,6 +92,7 @@ public interface DTOMapper {
 	@Mapping(source = "ingredientName", target = "ingredientName")
 	@Mapping(source = "ingredientDescription", target = "ingredientDescription")
 	@Mapping(source = "unit", target = "unit")
+	@Mapping(source = "category", target = "category")
 	Ingredient convertIngredientPostDTOtoEntity(IngredientPostDTO ingredientPostDTO);
 
 	@Mapping(source = "id", target = "id")
@@ -99,6 +100,7 @@ public interface DTOMapper {
 	@Mapping(source = "ingredientDescription", target = "ingredientDescription")
 	@Mapping(source = "unit", target = "unit")
 	@Mapping(source = "quantity", target = "quantity")
+	@Mapping(source = "category", target = "category")
 	IngredientGetDTO convertEntityToIngredientGetDTO(Ingredient ingredient);
 
 	// ─── Recipe and Meal Plan mappings ──────────────
