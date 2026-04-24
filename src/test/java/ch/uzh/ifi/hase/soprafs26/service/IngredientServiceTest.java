@@ -2,6 +2,7 @@ package ch.uzh.ifi.hase.soprafs26.service;
 
 import ch.uzh.ifi.hase.soprafs26.constant.Unit;
 import ch.uzh.ifi.hase.soprafs26.entity.Ingredient;
+import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.repository.IngredientRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-public class IngredientServiceTest {
+class IngredientServiceTest {
 
 	@Mock
 	private IngredientRepository ingredientRepository;
@@ -26,19 +27,24 @@ public class IngredientServiceTest {
 	private IngredientService ingredientService;
 
 	private Ingredient testIngredient;
+	private User testUser;
 
 	@BeforeEach
-	public void setup() {
+    void setup() {
 		MockitoAnnotations.openMocks(this);
 
 		testIngredient = new Ingredient();
 		testIngredient.setIngredientName("Milk");
 		testIngredient.setUnit(Unit.LITER);
+
+		testUser = new User();
+		testUser.setUserID("user-1");
+		testIngredient.setUser(testUser);
 	}
 
 	@Test
-	public void createIngredient_validInput_success() {
-		when(ingredientRepository.findByIngredientNameIgnoreCase("Milk")).thenReturn(Optional.empty());
+    void createIngredient_validInput_success() {
+		when(ingredientRepository.findByIngredientNameIgnoreCaseAndUser("Milk", testUser)).thenReturn(Optional.empty());
 		when(ingredientRepository.saveAndFlush(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
 		Ingredient created = ingredientService.createIngredient(testIngredient);
@@ -49,8 +55,9 @@ public class IngredientServiceTest {
 	}
 
 	@Test
-	public void createIngredient_duplicateName_throwsConflict() {
-		when(ingredientRepository.findByIngredientNameIgnoreCase("Milk")).thenReturn(Optional.of(testIngredient));
+    void createIngredient_duplicateName_throwsConflict() {
+		when(ingredientRepository.findByIngredientNameIgnoreCaseAndUser("Milk", testUser))
+				.thenReturn(Optional.of(testIngredient));
 
 		ResponseStatusException ex = assertThrows(ResponseStatusException.class,
 				() -> ingredientService.createIngredient(testIngredient));
@@ -58,7 +65,7 @@ public class IngredientServiceTest {
 	}
 
 	@Test
-	public void createIngredient_missingName_throwsBadRequest() {
+    void createIngredient_missingName_throwsBadRequest() {
 		testIngredient.setIngredientName(null);
 
 		ResponseStatusException ex = assertThrows(ResponseStatusException.class,
@@ -67,11 +74,20 @@ public class IngredientServiceTest {
 	}
 
 	@Test
-	public void createIngredient_missingUnit_throwsBadRequest() {
+    void createIngredient_missingUnit_throwsBadRequest() {
 		testIngredient.setUnit(null);
 
 		ResponseStatusException ex = assertThrows(ResponseStatusException.class,
 				() -> ingredientService.createIngredient(testIngredient));
 		assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+	}
+
+	@Test
+    void createIngredient_missingUser_throwsUnauthorized() {
+		testIngredient.setUser(null);
+
+		ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+				() -> ingredientService.createIngredient(testIngredient));
+		assertEquals(HttpStatus.UNAUTHORIZED, ex.getStatusCode());
 	}
 }

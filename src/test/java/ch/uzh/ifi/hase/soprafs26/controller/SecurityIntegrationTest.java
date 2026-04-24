@@ -2,6 +2,7 @@ package ch.uzh.ifi.hase.soprafs26.controller;
 
 import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
+import ch.uzh.ifi.hase.soprafs26.repository.IngredientRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.RegisterPostDTO;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-public class SecurityIntegrationTest {
+class SecurityIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -32,8 +33,12 @@ public class SecurityIntegrationTest {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private IngredientRepository ingredientRepository;
+
     @BeforeEach
-    public void setup() {
+    void setup() {
+        ingredientRepository.deleteAll();
         userRepository.deleteAll();
     }
 
@@ -53,7 +58,7 @@ public class SecurityIntegrationTest {
     }
 
     @Test
-    public void register_withoutAuthorization_isAllowed() throws Exception {
+    void register_withoutAuthorization_isAllowed() throws Exception {
         RegisterPostDTO registerPostDTO = new RegisterPostDTO();
         registerPostDTO.setEmail("public-register-user@example.com");
         registerPostDTO.setUsername("public-register-user");
@@ -71,7 +76,7 @@ public class SecurityIntegrationTest {
     }
 
     @Test
-    public void login_withValidCredentials_returnsUserIdAndToken() throws Exception {
+    void login_withValidCredentials_returnsUserIdAndToken() throws Exception {
         User persistedUser = new User();
         persistedUser.setEmail("login-user@example.com");
         persistedUser.setUsername("login-user");
@@ -93,14 +98,14 @@ public class SecurityIntegrationTest {
     }
 
     @Test
-    public void users_withoutAuthorization_isUnauthorized() throws Exception {
+    void users_withoutAuthorization_isUnauthorized() throws Exception {
         MockHttpServletRequestBuilder request = get("/users").contentType(MediaType.APPLICATION_JSON);
 
         mockMvc.perform(request).andExpect(status().isUnauthorized());
     }
 
     @Test
-    public void users_withBearerHeader_isUnauthorized() throws Exception {
+    void users_withBearerHeader_isUnauthorized() throws Exception {
         createOnlineUser("authorized-user@example.com", "authorized-user", "valid-token");
 
         MockHttpServletRequestBuilder request = get("/users")
@@ -111,7 +116,7 @@ public class SecurityIntegrationTest {
     }
 
     @Test
-    public void users_withValidAuthCookie_isAllowed() throws Exception {
+    void users_withValidAuthCookie_isAllowed() throws Exception {
         createOnlineUser("authorized-user@example.com", "authorized-user", "valid-token");
 
         MockHttpServletRequestBuilder request = get("/users")
@@ -124,7 +129,7 @@ public class SecurityIntegrationTest {
     }
 
     @Test
-    public void userById_withOwnAuthCookie_isAllowed() throws Exception {
+    void userById_withOwnAuthCookie_isAllowed() throws Exception {
         User persistedUser = createOnlineUser("self-user@example.com", "self-user", "self-token");
 
         MockHttpServletRequestBuilder request = get("/users/{userID}", persistedUser.getUserID())
@@ -137,7 +142,7 @@ public class SecurityIntegrationTest {
     }
 
     @Test
-    public void userById_withOtherUsersAuthCookie_isForbidden() throws Exception {
+    void userById_withOtherUsersAuthCookie_isForbidden() throws Exception {
         User requestedUser = createOnlineUser("requested-user@example.com", "requested-user", "requested-token");
         createOnlineUser("requester-user@example.com", "requester-user", "requester-token");
 
@@ -149,7 +154,7 @@ public class SecurityIntegrationTest {
     }
 
     @Test
-    public void logout_withValidAuthCookie_clearsCookieAndInvalidatesToken() throws Exception {
+    void logout_withValidAuthCookie_clearsCookieAndInvalidatesToken() throws Exception {
         createOnlineUser("logout-user@example.com", "logout-user", "logout-token");
 
         MockHttpServletRequestBuilder logoutRequest = post("/auth/logout")
