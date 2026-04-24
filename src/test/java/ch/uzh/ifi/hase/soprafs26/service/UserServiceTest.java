@@ -16,7 +16,7 @@ import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class UserServiceTest {
+ class UserServiceTest {
 
 	@Mock
 	private UserRepository userRepository;
@@ -30,7 +30,7 @@ public class UserServiceTest {
 	private User testUser;
 
 	@BeforeEach
-	public void setup() {
+	 void setup() {
 		MockitoAnnotations.openMocks(this);
 
 		testUser = new User();
@@ -44,7 +44,7 @@ public class UserServiceTest {
 	}
 
 	@Test
-	public void createUser_validInputs_success() {
+	 void createUser_validInputs_success() {
 		User createdUser = userService.createUser(testUser);
 
 		Mockito.verify(userRepository, Mockito.times(1)).save(Mockito.any());
@@ -56,7 +56,7 @@ public class UserServiceTest {
 	}
 
 	@Test
-	public void createUser_duplicateEmail_throwsException() {
+	 void createUser_duplicateEmail_throwsException() {
 		userService.createUser(testUser);
 		Mockito.when(userRepository.findByEmail(Mockito.any())).thenReturn(testUser);
 		Mockito.when(userRepository.findByUsername(Mockito.any())).thenReturn(null);
@@ -65,7 +65,7 @@ public class UserServiceTest {
 	}
 
 	@Test
-	public void createUser_duplicateInputs_throwsException() {
+	 void createUser_duplicateInputs_throwsException() {
 		userService.createUser(testUser);
 		Mockito.when(userRepository.findByEmail(Mockito.any())).thenReturn(testUser);
 		Mockito.when(userRepository.findByUsername(Mockito.any())).thenReturn(testUser);
@@ -74,7 +74,7 @@ public class UserServiceTest {
 	}
 
 	@Test
-	public void loginUser_validCredentials_success() {
+	 void loginUser_validCredentials_success() {
 		User persistedUser = new User();
 		persistedUser.setEmail("test@example.com");
 		persistedUser.setUsername("testUsername");
@@ -94,7 +94,7 @@ public class UserServiceTest {
 	}
 
 	@Test
-	public void loginUser_invalidPassword_throwsUnauthorized() {
+	 void loginUser_invalidPassword_throwsUnauthorized() {
 		User persistedUser = new User();
 		persistedUser.setEmail("test@example.com");
 		persistedUser.setUsername("testUsername");
@@ -109,7 +109,7 @@ public class UserServiceTest {
 	}
 
 	@Test
-	public void updateUserById_validInput_updatesAllProvidedFields() {
+	 void updateUserById_validInput_updatesAllProvidedFields() {
 		User persistedUser = new User();
 		persistedUser.setUserID("1");
 		persistedUser.setEmail("old@example.com");
@@ -141,7 +141,7 @@ public class UserServiceTest {
 	}
 
 	@Test
-	public void updateUserById_duplicateEmail_throwsConflict() {
+	 void updateUserById_duplicateEmail_throwsConflict() {
 		User persistedUser = new User();
 		persistedUser.setUserID("1");
 		persistedUser.setEmail("old@example.com");
